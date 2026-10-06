@@ -11,6 +11,9 @@ namespace SilentLedger.UI
     /// </summary>
     public class TouchHud : MonoBehaviour
     {
+        /// <summary>Buttons a mission can hide until it teaches them.</summary>
+        public enum Control { Fire, Aim, Reload, Swap, Crouch }
+
         [Header("Player")]
         [SerializeField] PlayerIntent intent;
         [SerializeField] WeaponHolder weapons;
@@ -95,6 +98,21 @@ namespace SilentLedger.UI
 
             hitMarker.alpha = Mathf.MoveTowards(hitMarker.alpha, 0f, Time.deltaTime * 4f);
             if (messageText.text.Length > 0 && Time.time >= messageHideTime) messageText.text = "";
+        }
+
+        public void SetControlVisible(Control control, bool visible)
+        {
+            switch (control)
+            {
+                case Control.Fire:
+                    fireButton.gameObject.SetActive(visible);
+                    leftFireButton.gameObject.SetActive(visible);
+                    break;
+                case Control.Aim: aimButton.gameObject.SetActive(visible); break;
+                case Control.Reload: reloadButton.gameObject.SetActive(visible); break;
+                case Control.Swap: swapButton.gameObject.SetActive(visible); break;
+                case Control.Crouch: crouchButton.gameObject.SetActive(visible); break;
+            }
         }
 
         void RefreshWeapon()

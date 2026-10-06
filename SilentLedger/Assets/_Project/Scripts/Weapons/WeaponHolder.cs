@@ -21,13 +21,20 @@ namespace SilentLedger.Weapons
         [SerializeField] float aimSharpness = 14f;
         [SerializeField, Range(1f, 3f)] float movingSpreadMultiplier = 1.5f;
         [SerializeField] LayerMask hitMask = Physics.DefaultRaycastLayers;
+        [Tooltip("How many weapons from the list the player starts with. 0 means all of them.")]
+        [SerializeField] int startingWeaponCount;
 
         /// <summary>Raised when the weapon, its ammo or its reload state changes.</summary>
         public event Action Changed;
         /// <summary>Raised when a shot hits something damageable; true if it took the target down.</summary>
         public event Action<bool> Hit;
+        /// <summary>Raised when a reload finishes.</summary>
+        public event Action Reloaded;
+        /// <summary>Raised when the player switches to another weapon.</summary>
+        public event Action Swapped;
 
         int index;
+        int available;
         float nextShotTime;
         float reloadEndTime = -1f;
         float swapEndTime = -1f;
@@ -42,6 +49,7 @@ namespace SilentLedger.Weapons
         void Awake()
         {
             foreach (var weapon in weapons) weapon.ResetAmmo();
+            available = startingWeaponCount <= 0 ? weapons.Count : Mathf.Min(startingWeaponCount, weapons.Count);
         }
 
         void Start() => Equip(index);
@@ -116,14 +124,30 @@ namespace SilentLedger.Weapons
             weapon.ReserveAmmo -= loaded;
             reloadEndTime = -1f;
             Changed?.Invoke();
+            Reloaded?.Invoke();
         }
 
         void BeginSwap()
         {
-            if (weapons.Count < 2 || IsSwapping) return;
+            if (available < 2 || IsSwapping) return;
             reloadEndTime = -1f;
-            Equip((index + 1) % weapons.Count);
+            Equip((index + 1) % available);
             swapEndTime = Time.time + swapSeconds;
+            Swapped?.Invoke();
+        }
+
+        /// <summary>Gives the player every weapon in the list, as when picking up a loadout.</summary>
+        public void UnlockAll()
+        {
+            available = weapons.Count;
+            Changed?.Invoke();
+        }
+
+        /// <summary>Leaves at most this many rounds in the current magazine, so there is something to reload.</summary>
+        public void DrainMagazine(int roundsLeft)
+        {
+            Current.AmmoInMagazine = Mathf.Min(Current.AmmoInMagazine, roundsLeft);
+            Changed?.Invoke();
         }
 
         void Equip(int newIndex)

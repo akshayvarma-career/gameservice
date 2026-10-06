@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/_Project/Scenes/Ch0_FirstLight.unity
+    guid: 8762f98711563704482429989b24fe3b
+  - enabled: 1
     path: Assets/_Project/Scenes/Ch0_TestRange.unity
     guid: a50b1c0abc3a9d04a823f1c3ffe5932b
   m_configObjects:
