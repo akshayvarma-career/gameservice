@@ -29,11 +29,12 @@ namespace SilentLedger.EditorTools
             EnsureFolder(Root, "Navigation");
             EnsureLayer(SquadLayer, "Squad");
 
-            Ground = Mat("Grey_Ground", new Color(0.36f, 0.37f, 0.35f));
-            Tarmac = Mat("Grey_Tarmac", new Color(0.24f, 0.25f, 0.26f));
-            Wall = Mat("Grey_Wall", new Color(0.62f, 0.62f, 0.6f));
+            GreyboxMeshes.ClearCache();
+            Ground = Mat("Grey_Ground", new Color(0.4f, 0.4f, 0.38f), ProceduralTextures.Concrete());
+            Tarmac = Mat("Grey_Tarmac", new Color(0.4f, 0.4f, 0.41f), ProceduralTextures.Tarmac());
+            Wall = Mat("Grey_Wall", new Color(0.66f, 0.65f, 0.62f), ProceduralTextures.Concrete());
             Dark = Mat("Grey_Dark", new Color(0.15f, 0.15f, 0.16f));
-            Metal = Mat("Grey_Metal", new Color(0.32f, 0.34f, 0.38f));
+            Metal = Mat("Grey_Metal", new Color(0.38f, 0.41f, 0.44f), ProceduralTextures.MetalPanel(), smoothness: 0.35f);
             Accent = Mat("Accent_Orange", new Color(0.95f, 0.55f, 0.15f));
             Enemy = Mat("Target_Hostile", new Color(0.8f, 0.2f, 0.18f));
             Civilian = Mat("Target_Civilian", new Color(0.2f, 0.45f, 0.85f));
@@ -59,16 +60,19 @@ namespace SilentLedger.EditorTools
             return group;
         }
 
+        /// <summary>
+        /// A box of the given size in metres. Uses a world-UV mesh (unscaled transform) so
+        /// textures tile at real-world density.
+        /// </summary>
         public static GameObject Box(string name, Transform parent, Vector3 position, Vector3 size, Material material,
             bool collider = true)
         {
-            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            go.name = name;
+            var go = new GameObject(name);
             go.transform.SetParent(parent, false);
             go.transform.localPosition = position;
-            go.transform.localScale = size;
-            go.GetComponent<Renderer>().sharedMaterial = material;
-            if (!collider) Object.DestroyImmediate(go.GetComponent<Collider>());
+            go.AddComponent<MeshFilter>().sharedMesh = GreyboxMeshes.Box(size);
+            go.AddComponent<MeshRenderer>().sharedMaterial = material;
+            if (collider) go.AddComponent<BoxCollider>().size = size;
             return go;
         }
 
@@ -151,7 +155,8 @@ namespace SilentLedger.EditorTools
 
         // ---------------------------------------------------------------- assets and serialization
 
-        public static Material Mat(string name, Color color)
+        public static Material Mat(string name, Color color, Texture2D baseMap = null, float smoothness = 0.15f,
+            Color? emission = null)
         {
             string path = $"{MaterialFolder}/{name}.mat";
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -161,7 +166,15 @@ namespace SilentLedger.EditorTools
                 AssetDatabase.CreateAsset(material, path);
             }
             material.SetColor("_BaseColor", color);
-            material.SetFloat("_Smoothness", 0.15f);
+            material.SetTexture("_BaseMap", baseMap);
+            material.SetFloat("_Smoothness", smoothness);
+            material.enableInstancing = true;
+            if (emission.HasValue)
+            {
+                material.EnableKeyword("_EMISSION");
+                material.SetColor("_EmissionColor", emission.Value);
+                material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
+            }
             EditorUtility.SetDirty(material);
             return material;
         }

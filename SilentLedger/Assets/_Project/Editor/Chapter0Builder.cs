@@ -38,7 +38,12 @@ namespace SilentLedger.EditorTools
             BuildOpsRoom(level, out var tamsinSpot);
             BuildBriefingRoom(level, out var vargaSpot);
             var killHouseEntrance = BuildKillHouse(level);
+            DressBase(level);
+            EnvironmentBuilder.MarkStatic(level);
             BakeNavMesh(level);
+
+            EnvironmentBuilder.DawnAtmosphere(Sun());
+            EnvironmentBuilder.DawnPostProcessing("Ch0_Dawn_Profile");
 
             var squad = Group("Squad", null);
             var tony = Character(squad, "Tony", new Color(0.55f, 0.8f, 0.35f), new Vector3(2.4f, 0f, 9f), 180f, 6f, follower: true);
@@ -90,17 +95,111 @@ namespace SilentLedger.EditorTools
 
         static void BuildTerrain(Transform level)
         {
-            Box("Ground", level, new Vector3(0f, -0.5f, 180f), new Vector3(200f, 1f, 520f), Ground);
+            // Site Hollow sits in a flat mountain valley; the sniper range runs north up it to 400 m.
+            var valley = new EnvironmentBuilder.Valley { flat = Rect.MinMaxRect(-75f, -45f, 75f, 450f), rise = 120f };
+            var terrain = EnvironmentBuilder.BuildTerrain(level, "Ch0_Terrain", new Vector3(-400f, 0f, -300f),
+                new Vector3(800f, 180f, 900f), valley, seed: 7);
+            EnvironmentBuilder.ScatterPines(level, terrain, 140, seed: 7);
+
             Box("Apron", level, new Vector3(5f, 0.005f, 0f), new Vector3(60f, 0.01f, 50f), Tarmac, collider: false);
             Box("Hangar", level, new Vector3(0f, 6f, 36f), new Vector3(36f, 12f, 8f), Metal);
             Box("HangarDoors", level, new Vector3(0f, 4.5f, 31.9f), new Vector3(24f, 9f, 0.2f), Dark);
+        }
 
-            var mountains = Mat("Mountain_Rock", new Color(0.3f, 0.3f, 0.33f));
-            var backdrop = Group("Mountains", level);
-            Box("Ridge_W", backdrop, new Vector3(-120f, 25f, 150f), new Vector3(40f, 70f, 420f), mountains);
-            Box("Ridge_E", backdrop, new Vector3(120f, 30f, 120f), new Vector3(40f, 80f, 420f), mountains);
-            Box("Ridge_N", backdrop, new Vector3(0f, 35f, 470f), new Vector3(260f, 90f, 30f), mountains);
-            Box("Ridge_S", backdrop, new Vector3(0f, 20f, -100f), new Vector3(260f, 60f, 30f), mountains);
+        /// <summary>Fence, floodlights, road, barriers, sandbags, crates, drums, mast and signs.</summary>
+        static void DressBase(Transform level)
+        {
+            var props = Group("Props", level);
+            var lamp = Mat("Lamp_Emissive", new Color(1f, 0.95f, 0.85f), emission: new Color(4f, 3.6f, 3f));
+            var redLamp = Mat("Lamp_Red", new Color(1f, 0.2f, 0.15f), emission: new Color(4f, 0.4f, 0.3f));
+            var sandbag = Mat("Sandbag", new Color(0.6f, 0.54f, 0.4f), ProceduralTextures.Concrete());
+            var crate = Mat("Crate_Olive", new Color(0.36f, 0.38f, 0.26f), ProceduralTextures.MetalPanel());
+            var drum = Mat("Drum_Red", new Color(0.5f, 0.17f, 0.12f), ProceduralTextures.MetalPanel(), smoothness: 0.3f);
+            var paint = Mat("Paint_Yellow", new Color(0.9f, 0.75f, 0.2f));
+
+            // Perimeter fence with a gate on the south side; the range strip stays open to the north.
+            var fence = Group("Fence", props);
+            FenceRun(fence, new Vector3(-60f, 0f, -35f), new Vector3(-6f, 0f, -35f));
+            FenceRun(fence, new Vector3(6f, 0f, -35f), new Vector3(62f, 0f, -35f));
+            FenceRun(fence, new Vector3(62f, 0f, -35f), new Vector3(62f, 0f, 72f));
+            FenceRun(fence, new Vector3(-28f, 0f, 72f), new Vector3(62f, 0f, 72f));
+            FenceRun(fence, new Vector3(-60f, 0f, -35f), new Vector3(-60f, 0f, 72f));
+
+            // Access road and barriers from the gate to the apron.
+            Box("Road", props, new Vector3(0f, 0.006f, -31f), new Vector3(9f, 0.01f, 14f), Tarmac, collider: false);
+            for (int i = 0; i < 5; i++)
+            {
+                Box("Barrier", props, new Vector3(-5.5f, 0.4f, -34f + i * 2.6f), new Vector3(0.6f, 0.8f, 2.2f), Wall);
+                Box("Barrier", props, new Vector3(5.5f, 0.4f, -34f + i * 2.6f), new Vector3(0.6f, 0.8f, 2.2f), Wall);
+            }
+
+            // Apron paint: taxi line from the helipad to the hangar, and an apron edge line.
+            Box("TaxiLine", props, new Vector3(0f, 0.012f, 24.5f), new Vector3(0.3f, 0.005f, 12f), paint, collider: false);
+            Box("EdgeLine", props, new Vector3(-24.6f, 0.012f, 0f), new Vector3(0.25f, 0.005f, 50f), paint, collider: false);
+
+            // Floodlight towers facing the middle of the base.
+            foreach (var spot in new[] { new Vector3(-55f, 0f, -30f), new Vector3(55f, 0f, -30f), new Vector3(55f, 0f, 66f), new Vector3(-24f, 0f, 66f) })
+            {
+                var tower = Group("Floodlight", props, spot);
+                var toCentre = new Vector3(5f, 0f, 15f) - spot;
+                tower.rotation = Quaternion.LookRotation(new Vector3(toCentre.x, 0f, toCentre.z));
+                Box("Pole", tower, new Vector3(0f, 5f, 0f), new Vector3(0.3f, 10f, 0.3f), Metal);
+                Box("Head", tower, new Vector3(0f, 10.1f, 0.2f), new Vector3(1.6f, 0.7f, 0.4f), Dark, collider: false);
+                Box("Lamp", tower, new Vector3(0f, 10.1f, 0.42f), new Vector3(1.4f, 0.5f, 0.04f), lamp, collider: false);
+            }
+
+            // Radio mast behind the ops room, red warning lamp on top.
+            Box("RadioMast", props, new Vector3(31f, 9f, -20f), new Vector3(0.4f, 18f, 0.4f), Metal);
+            Box("MastLamp", props, new Vector3(31f, 18.2f, -20f), new Vector3(0.35f, 0.35f, 0.35f), redLamp, collider: false);
+
+            // Sandbag walls either side of the range bench.
+            for (int i = 0; i < 2; i++)
+            {
+                float x = i == 0 ? -49.5f : -30.5f;
+                Box("Sandbags", props, new Vector3(x, 0.45f, 2f), new Vector3(2.4f, 0.9f, 0.9f), sandbag);
+                Box("Sandbags", props, new Vector3(x, 1.1f, 2f), new Vector3(2f, 0.4f, 0.8f), sandbag);
+            }
+
+            // Crates and fuel drums by the hangar.
+            foreach (var c in new[] { new Vector3(13f, 0.6f, 26f), new Vector3(14.3f, 0.6f, 26.2f), new Vector3(13.6f, 1.8f, 26.1f), new Vector3(-15f, 0.6f, 25f), new Vector3(-16.3f, 0.6f, 24.6f) })
+                Box("Crate", props, c, new Vector3(1.2f, 1.2f, 1.2f), crate);
+            for (int i = 0; i < 5; i++)
+            {
+                var barrel = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                barrel.name = "Drum";
+                barrel.transform.SetParent(props, false);
+                barrel.transform.localPosition = new Vector3(-12f + (i % 3) * 0.7f, 0.45f, 27f + (i / 3) * 0.7f);
+                barrel.transform.localScale = new Vector3(0.6f, 0.45f, 0.6f);
+                barrel.GetComponent<Renderer>().sharedMaterial = drum;
+            }
+
+            // Windsock by the helipad.
+            Box("WindsockPole", props, new Vector3(9f, 2f, 18f), new Vector3(0.1f, 4f, 0.1f), Metal);
+            var sock = Box("Windsock", props, new Vector3(9.55f, 3.8f, 18f), new Vector3(1.1f, 0.35f, 0.35f), Accent, collider: false);
+            sock.transform.localRotation = Quaternion.Euler(0f, 20f, -12f);
+
+            // Door signs.
+            foreach (var z in new[] { 1f, -13f })
+                Box("DoorSign", props, new Vector3(17.85f, 2.65f, z), new Vector3(0.05f, 0.35f, 1.6f), Accent, collider: false);
+            Box("DoorSign", props, new Vector3(31.85f, 2.65f, 1f), new Vector3(0.05f, 0.35f, 1.6f), Accent, collider: false);
+        }
+
+        /// <summary>A straight fence: posts every 4 m, two rails, and one collider for the whole run.</summary>
+        static void FenceRun(Transform parent, Vector3 from, Vector3 to)
+        {
+            var run = Group("FenceRun", parent, (from + to) * 0.5f);
+            var along = to - from;
+            float length = along.magnitude;
+            run.rotation = Quaternion.LookRotation(along.normalized);
+            int posts = Mathf.Max(2, Mathf.RoundToInt(length / 4f) + 1);
+            for (int i = 0; i < posts; i++)
+            {
+                float z = -length / 2f + length * i / (posts - 1);
+                Box("Post", run, new Vector3(0f, 1.1f, z), new Vector3(0.1f, 2.2f, 0.1f), Metal, collider: false);
+            }
+            Box("RailTop", run, new Vector3(0f, 2.1f, 0f), new Vector3(0.05f, 0.05f, length), Metal, collider: false);
+            Box("RailMid", run, new Vector3(0f, 1.1f, 0f), new Vector3(0.05f, 0.05f, length), Metal, collider: false);
+            run.gameObject.AddComponent<BoxCollider>().size = new Vector3(0.2f, 2.2f, length);
         }
 
         static void BuildHelipad(Transform level)
@@ -201,7 +300,10 @@ namespace SilentLedger.EditorTools
         static void BakeNavMesh(Transform level)
         {
             var surface = level.gameObject.AddComponent<NavMeshSurface>();
-            surface.collectObjects = CollectObjects.Children;
+            // Only the base itself: the terrain is far larger than anywhere squadmates walk.
+            surface.collectObjects = CollectObjects.Volume;
+            surface.center = new Vector3(0f, 5f, 18f);
+            surface.size = new Vector3(150f, 20f, 120f);
             surface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
             surface.layerMask = ~((1 << IgnoreRaycastLayer) | (1 << UILayer) | (1 << SquadLayer));
             surface.BuildNavMesh();

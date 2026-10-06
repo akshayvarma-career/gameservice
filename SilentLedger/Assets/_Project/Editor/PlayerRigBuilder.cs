@@ -9,6 +9,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 using static SilentLedger.EditorTools.GreyboxKit;
 
@@ -64,9 +65,12 @@ namespace SilentLedger.EditorTools
             cameraGo.transform.SetParent(cameraRoot, false);
             var cam = cameraGo.AddComponent<Camera>();
             cam.nearClipPlane = 0.03f;
-            cam.farClipPlane = 800f;
+            cam.farClipPlane = 1000f;
             cam.fieldOfView = 70f;
             cameraGo.AddComponent<AudioListener>();
+            var cameraData = cameraGo.AddComponent<UniversalAdditionalCameraData>();
+            cameraData.renderPostProcessing = true;
+            cameraData.antialiasing = AntialiasingMode.FastApproximateAntialiasing; // cheap on mobile
 
             rig.weapons = cameraGo.AddComponent<WeaponHolder>();
             var interactor = cameraGo.AddComponent<Interactor>();
@@ -258,6 +262,8 @@ namespace SilentLedger.EditorTools
             icon.localRotation = Quaternion.Euler(0f, 0f, 45f);
             Img(icon, null, new Color(0.95f, 0.64f, 0.23f), raycast: false);
             var distance = Label("Distance", waypoint, "", 22, TextAnchor.UpperCenter, Half, new Vector2(0f, -20f), new Vector2(160f, 30f));
+            var stats = Label("DevStats", canvas, "", 22, TextAnchor.UpperCenter, new Vector2(0.5f, 1f), new Vector2(0f, -8f), new Vector2(300f, 30f));
+            Set(stats.gameObject.AddComponent<DevStats>(), "label", stats);
 
             // Buttons, positions from the bottom-right corner unless noted.
             var bottomRight = new Vector2(1f, 0f);
