@@ -57,10 +57,10 @@ namespace SilentLedger.Weapons
             if (IsReloading && now >= reloadEndTime) FinishReload();
 
             bool held = intent.FireHeld;
-            bool pressed = held && !wasFireHeld;
+            bool pressed = (held && !wasFireHeld) | intent.ConsumeFirePressed();
             wasFireHeld = held;
 
-            bool trigger = Current.stats.automatic ? held : pressed;
+            bool trigger = Current.stats.automatic ? held || pressed : pressed;
             if (trigger && !IsSwapping && !IsReloading && now >= nextShotTime)
             {
                 if (Current.AmmoInMagazine > 0) Fire(now);

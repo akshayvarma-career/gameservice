@@ -28,11 +28,13 @@ namespace SilentLedger.Weapons
 
         static Transform CreateMark()
         {
-            var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            // A cube, not a sphere: player builds strip engine classes no scene uses, and the
+            // levels only use box colliders, so CreatePrimitive(Sphere) fails on device.
+            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
             go.name = "ImpactMark";
             Object.Destroy(go.GetComponent<Collider>());
             go.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            go.transform.localScale = Vector3.one * Size;
+            go.transform.localScale = new Vector3(Size, Size, 0.005f);
             return go.transform;
         }
     }

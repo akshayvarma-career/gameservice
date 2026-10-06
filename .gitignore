@@ -9,6 +9,7 @@
 /SilentLedger/[Uu]ser[Ss]ettings/
 /SilentLedger/[Mm]emoryCaptures/
 /SilentLedger/[Rr]ecordings/
+/SilentLedger/.utmp/
 
 # Asset Store tools and auto-generated plugin folders
 /SilentLedger/[Aa]ssets/AssetStoreTools*

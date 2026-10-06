@@ -30,7 +30,7 @@ namespace SilentLedger.Player
         public bool Aiming { get; private set; }
 
         Vector2 lookDegrees;
-        bool reload, swap, interact, crouch, prone;
+        bool firePressed, reload, swap, interact, crouch, prone;
 
         public void AddLook(Vector2 degrees) => lookDegrees += degrees;
 
@@ -52,6 +52,13 @@ namespace SilentLedger.Player
         }
 
         public void CancelAim() => Aiming = false;
+
+        /// <summary>
+        /// A trigger pull. Recorded separately from FireHeld so a tap that is pressed and released
+        /// within one frame still fires a shot.
+        /// </summary>
+        public void RequestFire() => firePressed = true;
+        public bool ConsumeFirePressed() => Consume(ref firePressed);
 
         public void RequestReload() => reload = true;
         public void RequestSwap() => swap = true;

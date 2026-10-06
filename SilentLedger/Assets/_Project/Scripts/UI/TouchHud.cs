@@ -42,6 +42,8 @@ namespace SilentLedger.UI
 
         void OnEnable()
         {
+            fireButton.Pressed += intent.RequestFire;
+            leftFireButton.Pressed += intent.RequestFire;
             aimButton.Pressed += intent.AimPressed;
             aimButton.Released += intent.AimReleased;
             reloadButton.Pressed += intent.RequestReload;
@@ -58,6 +60,8 @@ namespace SilentLedger.UI
 
         void OnDisable()
         {
+            fireButton.Pressed -= intent.RequestFire;
+            leftFireButton.Pressed -= intent.RequestFire;
             aimButton.Pressed -= intent.AimPressed;
             aimButton.Released -= intent.AimReleased;
             reloadButton.Pressed -= intent.RequestReload;
