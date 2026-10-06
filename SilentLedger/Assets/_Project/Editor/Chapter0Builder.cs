@@ -301,9 +301,11 @@ namespace SilentLedger.EditorTools
         {
             var surface = level.gameObject.AddComponent<NavMeshSurface>();
             // Only the base itself: the terrain is far larger than anywhere squadmates walk.
+            // Keep the volume taller than the terrain: a shorter one silently drops the terrain
+            // and leaves the valley floor without NavMesh (Tony then snaps onto the helicopter roof).
             surface.collectObjects = CollectObjects.Volume;
-            surface.center = new Vector3(0f, 5f, 18f);
-            surface.size = new Vector3(150f, 20f, 120f);
+            surface.center = new Vector3(0f, 95f, 18f);
+            surface.size = new Vector3(150f, 200f, 120f);
             surface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
             surface.layerMask = ~((1 << IgnoreRaycastLayer) | (1 << UILayer) | (1 << SquadLayer));
             surface.BuildNavMesh();

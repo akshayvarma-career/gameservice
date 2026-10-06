@@ -40,7 +40,15 @@ namespace SilentLedger.Mission
         {
             var controller = FindAnyObjectByType<PlayerController>();
             if (controller != null) player = controller.transform;
-            if (agent != null) agent.stoppingDistance = followDistance;
+            if (agent != null)
+            {
+                agent.stoppingDistance = followDistance;
+                // Start on the ground under our feet, not whatever NavMesh is nearest (e.g. a vehicle roof).
+                if (NavMesh.SamplePosition(transform.position, out var hit, 1.5f, NavMesh.AllAreas))
+                    agent.Warp(hit.position);
+                else
+                    Debug.LogWarning($"{displayName} has no NavMesh within 1.5 m of {transform.position}", this);
+            }
         }
 
         public void Interact(Interactor interactor)
