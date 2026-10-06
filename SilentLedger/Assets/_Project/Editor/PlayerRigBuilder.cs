@@ -1,3 +1,4 @@
+using SilentLedger.Audio;
 using SilentLedger.Interaction;
 using SilentLedger.Mission;
 using SilentLedger.Player;
@@ -85,6 +86,12 @@ namespace SilentLedger.EditorTools
             SetList(rig.weapons, "weapons", rifle, pistol);
             Set(interactor, "intent", rig.intent);
 
+            BuildAudio(rig.root.transform);
+            rifle.shotSounds = SfxGenerator.Clips("rifle_shot_");
+            pistol.shotSounds = SfxGenerator.Clips("pistol_shot_");
+            Set(player.AddComponent<Footsteps>(), "controller", controller);
+            Set(cameraGo.AddComponent<WeaponAudio>(), "weapons", rig.weapons);
+
             BuildHud(ref rig, interactor);
             PrefabUtility.SaveAsPrefabAssetAndConnect(rig.root, PrefabPath, InteractionMode.AutomatedAction);
             return rig;
@@ -94,6 +101,35 @@ namespace SilentLedger.EditorTools
         {
             var eventSystem = new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
             eventSystem.GetComponent<InputSystemUIInputModule>().AssignDefaultActions();
+        }
+
+        // ---------------------------------------------------------------- audio
+
+        static void BuildAudio(Transform parent)
+        {
+            var library = SfxGenerator.EnsureGenerated();
+            var audio = Group("Audio", parent);
+            var voices2D = new AudioSource[8];
+            var voices3D = new AudioSource[12];
+            for (int i = 0; i < voices2D.Length; i++) voices2D[i] = Voice(audio, $"Voice2D_{i}", spatial: false);
+            for (int i = 0; i < voices3D.Length; i++) voices3D[i] = Voice(audio, $"Voice3D_{i}", spatial: true);
+
+            var sfx = audio.gameObject.AddComponent<Sfx>();
+            Set(sfx, "library", library);
+            SetList(sfx, "voices2D", voices2D);
+            SetList(sfx, "voices3D", voices3D);
+        }
+
+        static AudioSource Voice(Transform parent, string name, bool spatial)
+        {
+            var source = Group(name, parent).gameObject.AddComponent<AudioSource>();
+            source.playOnAwake = false;
+            source.spatialBlend = spatial ? 1f : 0f;
+            source.dopplerLevel = 0f;
+            source.rolloffMode = AudioRolloffMode.Logarithmic;
+            source.minDistance = 1.5f;
+            source.maxDistance = 60f;
+            return source;
         }
 
         // ---------------------------------------------------------------- weapons

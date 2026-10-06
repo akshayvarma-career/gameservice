@@ -1,3 +1,4 @@
+using SilentLedger.Audio;
 using UnityEngine;
 
 namespace SilentLedger.Interaction
@@ -17,7 +18,13 @@ namespace SilentLedger.Interaction
 
         void Awake() => closedRotation = transform.localRotation;
 
-        public void Interact(Interactor interactor) => open = !open;
+        public void Interact(Interactor interactor)
+        {
+            open = !open;
+            var library = Sfx.Library;
+            if (library != null)
+                Sfx.PlayAt(open ? library.doorOpen : library.doorClose, transform.position + Vector3.up * 1.2f, 0.8f);
+        }
 
         void Update()
         {

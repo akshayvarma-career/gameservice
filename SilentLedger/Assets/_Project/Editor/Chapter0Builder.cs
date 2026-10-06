@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using SilentLedger.Audio;
 using SilentLedger.Interaction;
 using SilentLedger.Mission;
 using SilentLedger.Weapons;
@@ -239,6 +240,7 @@ namespace SilentLedger.EditorTools
                 agent.acceleration = 20f;
                 agent.radius = 0.35f;
                 agent.height = 1.8f;
+                root.gameObject.AddComponent<AgentFootsteps>();
             }
 
             var member = root.gameObject.AddComponent<SquadMember>();

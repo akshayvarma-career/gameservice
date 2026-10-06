@@ -30,6 +30,10 @@ namespace SilentLedger.Weapons
         [Tooltip("View-model position relative to the camera when aiming down sights.")]
         public Vector3 aimPosition = new Vector3(0f, -0.09f, 0.38f);
 
+        [Tooltip("Shot sounds; one is picked at random per shot.")]
+        public AudioClip[] shotSounds;
+        [Range(0f, 1f)] public float shotVolume = 0.9f;
+
         public int AmmoInMagazine { get; set; }
         public int ReserveAmmo { get; set; }
 

@@ -1,4 +1,5 @@
 using System.Collections;
+using SilentLedger.Audio;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -32,10 +33,15 @@ namespace SilentLedger.Mission
             waypoint.gameObject.SetActive(false);
         }
 
-        public void SetObjective(string objective) =>
-            objectiveText.text = string.IsNullOrEmpty(objective)
+        public void SetObjective(string objective)
+        {
+            string text = string.IsNullOrEmpty(objective)
                 ? ""
                 : $"<size=20><color=#F2A33A>OBJECTIVE</color></size>\n{objective}";
+            if (text == objectiveText.text) return;
+            objectiveText.text = text;
+            if (text.Length > 0 && Sfx.Library != null) Sfx.Play2D(Sfx.Library.objectiveUpdated, 0.35f, 0f);
+        }
 
         /// <summary>Points the waypoint at a target, or hides it when target is null.</summary>
         public void SetWaypoint(Transform target, float heightAboveTarget = 2.2f)

@@ -28,6 +28,14 @@ namespace SilentLedger.Weapons
         public event Action Changed;
         /// <summary>Raised when a shot hits something damageable; true if it took the target down.</summary>
         public event Action<bool> Hit;
+        /// <summary>Raised for every shot fired.</summary>
+        public event Action Fired;
+        /// <summary>Raised when the trigger is pulled with no ammo left at all.</summary>
+        public event Action DryFired;
+        /// <summary>Raised where a shot lands: point, surface normal, and whether it hit something damageable.</summary>
+        public event Action<Vector3, Vector3, bool> Impact;
+        /// <summary>Raised when a reload begins.</summary>
+        public event Action ReloadStarted;
         /// <summary>Raised when a reload finishes.</summary>
         public event Action Reloaded;
         /// <summary>Raised when the player switches to another weapon.</summary>
@@ -72,7 +80,8 @@ namespace SilentLedger.Weapons
             if (trigger && !IsSwapping && !IsReloading && now >= nextShotTime)
             {
                 if (Current.AmmoInMagazine > 0) Fire(now);
-                else if (pressed) TryReload();
+                else if (pressed && Current.ReserveAmmo > 0) TryReload();
+                else if (pressed) DryFired?.Invoke();
             }
 
             UpdateViewModel(Time.deltaTime);
@@ -91,10 +100,12 @@ namespace SilentLedger.Weapons
             Vector2 offset = UnityEngine.Random.insideUnitCircle * Mathf.Tan(spread * Mathf.Deg2Rad);
             Vector3 direction = (cam.forward + cam.right * offset.x + cam.up * offset.y).normalized;
 
+            Fired?.Invoke();
             if (Physics.Raycast(cam.position, direction, out var hit, stats.range, hitMask, QueryTriggerInteraction.Ignore))
             {
                 ImpactMarks.Spawn(hit.point, hit.normal);
                 var target = hit.collider.GetComponentInParent<IDamageable>();
+                Impact?.Invoke(hit.point, hit.normal, target != null);
                 if (target != null) Hit?.Invoke(target.ApplyDamage(stats.damage, hit.point, direction));
             }
 
@@ -114,6 +125,7 @@ namespace SilentLedger.Weapons
                 || weapon.AmmoInMagazine == weapon.stats.magazineSize) return;
             reloadEndTime = Time.time + weapon.stats.reloadSeconds;
             Changed?.Invoke();
+            ReloadStarted?.Invoke();
         }
 
         void FinishReload()

@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1bfebe23029d2d439d674c1c9dbbd3c, type: 3}
+  m_Name: SfxLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::SilentLedger.Audio.SfxLibrary
+  footstepsConcrete:
+  - {fileID: 8300000, guid: 06ced03d7569d3740883b470ae99022b, type: 3}
+  - {fileID: 8300000, guid: 9d9744163c325184395e4d5840b96760, type: 3}
+  - {fileID: 8300000, guid: e7439062f2435db48acc0b89c4739682, type: 3}
+  - {fileID: 8300000, guid: f77cb83f484a8ea4d8078b784c5581af, type: 3}
+  - {fileID: 8300000, guid: fa446814e9225834fb53e2d00314c39e, type: 3}
+  - {fileID: 8300000, guid: 18c7acbd247eb9843ae22b4ae17c0313, type: 3}
+  stanceChange:
+  - {fileID: 8300000, guid: 871cc0416043eb14898078fd3188d2d1, type: 3}
+  dryFire:
+  - {fileID: 8300000, guid: 4d095f935a23dbf47a1433564e40e099, type: 3}
+  magazineOut:
+  - {fileID: 8300000, guid: 1ec58df7525e7ef4a863d8e23ed86470, type: 3}
+  magazineIn:
+  - {fileID: 8300000, guid: d4c9ec58dd0d63f4ca3c3630cd8aa832, type: 3}
+  boltRack:
+  - {fileID: 8300000, guid: b85845eec7e7a404097c71cc4c03ccfd, type: 3}
+  weaponSwap:
+  - {fileID: 8300000, guid: ec31fee8e01aaba41add93cc3df27bb3, type: 3}
+  impactConcrete:
+  - {fileID: 8300000, guid: 3e279284d9a28bc489867743894e7cbb, type: 3}
+  - {fileID: 8300000, guid: 7a094e07769bfbf41a3a643482c6171d, type: 3}
+  - {fileID: 8300000, guid: 04bb1fe929e089640abc623ad98f6121, type: 3}
+  targetHit:
+  - {fileID: 8300000, guid: bf6e25fdec973214c9912ab1de6b0317, type: 3}
+  - {fileID: 8300000, guid: 6cf73094cd162c1459d119b8903d0524, type: 3}
+  doorOpen:
+  - {fileID: 8300000, guid: 86ea1eb479232cf4fbb9007f1d7346db, type: 3}
+  doorClose:
+  - {fileID: 8300000, guid: 2dcd38fce44df8644bf528debe0d0fe9, type: 3}
+  hitMarker:
+  - {fileID: 8300000, guid: bbd5dbfd352f05842a5eab69c6f2320f, type: 3}
+  killMarker:
+  - {fileID: 8300000, guid: a3f1123ac3797154dbca43d1569eb21f, type: 3}
+  objectiveUpdated:
+  - {fileID: 8300000, guid: 9dc9ab3a68effb640af419c5da65c287, type: 3}

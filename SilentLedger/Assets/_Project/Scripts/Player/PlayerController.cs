@@ -41,6 +41,9 @@ namespace SilentLedger.Player
         public Stance CurrentStance { get; private set; } = Stance.Standing;
         public bool IsSprinting { get; private set; }
         public bool IsMoving => horizontalVelocity.sqrMagnitude > 0.1f;
+        /// <summary>Horizontal speed in m/s.</summary>
+        public float Speed => horizontalVelocity.magnitude;
+        public bool IsGrounded => body.isGrounded;
 
         void Awake() => body = GetComponent<CharacterController>();
 

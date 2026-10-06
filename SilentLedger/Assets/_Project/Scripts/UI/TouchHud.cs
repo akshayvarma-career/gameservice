@@ -1,3 +1,4 @@
+using SilentLedger.Audio;
 using SilentLedger.Interaction;
 using SilentLedger.Player;
 using SilentLedger.Weapons;
@@ -131,6 +132,8 @@ namespace SilentLedger.UI
             var color = civilian ? CivilianColor : downed ? KillColor : HitColor;
             foreach (var g in hitMarkerGraphics) g.color = color;
             hitMarker.alpha = 1f;
+            if (Sfx.Library != null)
+                Sfx.Play2D(downed ? Sfx.Library.killMarker : Sfx.Library.hitMarker, 0.45f, 0f);
         }
 
         void OnTargetDowned(Target target)
