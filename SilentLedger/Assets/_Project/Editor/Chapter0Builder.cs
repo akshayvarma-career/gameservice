@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using SilentLedger.World;
 using SilentLedger.Audio;
 using SilentLedger.Interaction;
 using SilentLedger.Mission;
@@ -32,7 +34,7 @@ namespace SilentLedger.EditorTools
 
             var level = new GameObject("Level").transform;
             BuildTerrain(level);
-            BuildHelipad(level);
+            var helicopter = BuildHelipad(level);
             var rangeTargets = BuildSniperRange(level, out var bishopSpot);
             var bench = BuildArmory(level, out var okaforSpot);
             BuildOpsRoom(level, out var tamsinSpot);
@@ -46,15 +48,22 @@ namespace SilentLedger.EditorTools
             EnvironmentBuilder.DawnPostProcessing("Ch0_Dawn_Profile");
 
             var squad = Group("Squad", null);
-            // Tony stands beside the cabin, his dropped bag at his feet.
-            var tony = Character(squad, "Tony", new Color(0.55f, 0.8f, 0.35f), new Vector3(3f, 0f, 14f), 200f, 6f, follower: true);
-            Box("Bag", squad, new Vector3(3.6f, 0.2f, 13.2f), new Vector3(0.6f, 0.4f, 0.35f), Dark);
+            // Tony rides in on the helicopter and jumps out of its left side; without the model he
+            // waits there with his dropped bag.
+            var tony = Character(squad, "Tony", new Color(0.55f, 0.8f, 0.35f), new Vector3(-3.2f, 0f, 13.1f), 120f, 6f, follower: true);
+            var tonyBag = Box("Bag", squad, new Vector3(-2.5f, 0.2f, 12.3f), new Vector3(0.6f, 0.4f, 0.35f), Dark, collider: false);
+            if (helicopter != null)
+            {
+                Set(helicopter, "passenger", tony.transform);
+                Set(helicopter, "bag", tonyBag.transform);
+            }
             var bishop = Character(squad, "Bishop", new Color(0.55f, 0.62f, 0.75f), bishopSpot, 0f, 0f);
             var okafor = Character(squad, "Okafor", new Color(0.9f, 0.55f, 0.3f), okaforSpot, -90f, 6f);
             var tamsin = Character(squad, "Tamsin", new Color(0.75f, 0.5f, 0.95f), tamsinSpot, -90f, 6f);
             var varga = Character(squad, "Col. Varga", new Color(0.92f, 0.9f, 0.82f), vargaSpot, -90f, 8f);
 
-            var rig = PlayerRigBuilder.Build(new Vector3(0f, 0f, -6f), 0f);
+            // Start off the helicopter's left side, facing the pad, to watch it land and Tony get out.
+            var rig = PlayerRigBuilder.Build(new Vector3(-14f, 0f, 3f), 50f);
             Set(rig.weapons, "startingWeaponCount", 1); // the pistol comes from the armory
             PlayerRigBuilder.AddEventSystem();
 
@@ -65,6 +74,7 @@ namespace SilentLedger.EditorTools
             Set(director, "hud", rig.missionHud);
             Set(director, "player", rig.player);
             Set(director, "tony", tony);
+            if (helicopter != null) Set(director, "helicopter", helicopter);
             Set(director, "bishop", bishop);
             Set(director, "okafor", okafor);
             Set(director, "tamsin", tamsin);
@@ -203,7 +213,7 @@ namespace SilentLedger.EditorTools
             run.gameObject.AddComponent<BoxCollider>().size = new Vector3(0.2f, 2.2f, length);
         }
 
-        static void BuildHelipad(Transform level)
+        static HelicopterArrival BuildHelipad(Transform level)
         {
             var pad = Group("Helipad", level, new Vector3(0f, 0f, 12f));
             Box("Pad", pad, new Vector3(0f, 0.02f, 0f), new Vector3(14f, 0.02f, 14f), Dark, collider: false);
@@ -217,7 +227,7 @@ namespace SilentLedger.EditorTools
             {
                 var instance = (GameObject)PrefabUtility.InstantiatePrefab(model, pad);
                 instance.transform.localPosition = new Vector3(0f, 0f, 0.5f);
-                return;
+                return SetUpArrival(instance);
             }
 
             var heli = Group("Helicopter", pad, new Vector3(-0.5f, 0f, 1f));
@@ -228,6 +238,32 @@ namespace SilentLedger.EditorTools
             Box("Rotor", heli, new Vector3(0f, 2.65f, 0f), new Vector3(11f, 0.06f, 0.35f), Dark, collider: false);
             Box("Skid_L", heli, new Vector3(-1.1f, 0.15f, 0f), new Vector3(0.15f, 0.15f, 5f), Dark);
             Box("Skid_R", heli, new Vector3(1.1f, 0.15f, 0f), new Vector3(0.15f, 0.15f, 5f), Dark);
+            return null;
+        }
+
+        /// <summary>
+        /// Makes the placed helicopter fly in and land: rotors hold full speed until touchdown, and
+        /// a looping 3D rotor sound follows rotor speed (with a little Doppler for the fly-over).
+        /// </summary>
+        static HelicopterArrival SetUpArrival(GameObject helicopter)
+        {
+            var rotors = helicopter.GetComponentsInChildren<RotorSpin>(true);
+            foreach (var rotor in rotors) Set(rotor, "spinDownOnStart", false);
+
+            var audio = helicopter.AddComponent<AudioSource>();
+            audio.clip = SfxGenerator.Clips("heli_rotor_loop").FirstOrDefault();
+            audio.loop = true;
+            audio.playOnAwake = true;
+            audio.spatialBlend = 1f;
+            audio.rolloffMode = AudioRolloffMode.Linear;
+            audio.minDistance = 12f;
+            audio.maxDistance = 350f;
+            audio.dopplerLevel = 0.6f;
+
+            var arrival = helicopter.AddComponent<HelicopterArrival>();
+            SetList(arrival, "rotors", rotors);
+            Set(arrival, "rotorAudio", audio);
+            return arrival;
         }
 
         static List<Target> BuildSniperRange(Transform level, out Vector3 bishopSpot)

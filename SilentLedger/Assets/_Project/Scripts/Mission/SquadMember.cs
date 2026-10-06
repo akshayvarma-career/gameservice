@@ -40,7 +40,7 @@ namespace SilentLedger.Mission
         {
             var controller = FindAnyObjectByType<PlayerController>();
             if (controller != null) player = controller.transform;
-            if (agent != null)
+            if (agent != null && agent.enabled) // disabled while riding in a vehicle
             {
                 agent.stoppingDistance = followDistance;
                 // Start on the ground under our feet, not whatever NavMesh is nearest (e.g. a vehicle roof).

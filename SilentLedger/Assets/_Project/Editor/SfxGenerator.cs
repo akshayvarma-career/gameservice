@@ -46,6 +46,7 @@ namespace SilentLedger.EditorTools
             written.Add(Write("ui_hit_marker_01", Blips(new[] { (0f, 2800f) }, 0.07f, 0.015f)));
             written.Add(Write("ui_kill_marker_01", Blips(new[] { (0f, 2600f), (0.07f, 3400f) }, 0.2f, 0.02f)));
             written.Add(Write("ui_objective_01", Blips(new[] { (0f, 660f), (0.12f, 990f) }, 0.7f, 0.22f)));
+            written.Add(Write("heli_rotor_loop", RotorLoop(1400)));
 
             AssetDatabase.Refresh();
             foreach (var path in written) ConfigureImport(path);
@@ -286,6 +287,39 @@ namespace SilentLedger.EditorTools
                 }
             }
             return Normalize(s, 0.5f);
+        }
+
+        /// <summary>
+        /// Seamless 2 s helicopter loop: blade thump at 18 Hz, a body thud, turbine whine and hiss.
+        /// Every periodic part fits a whole number of cycles in the loop, and the noise is filtered
+        /// circularly, so the end joins the start without a click.
+        /// </summary>
+        static float[] RotorLoop(int seed)
+        {
+            int n = Samples(2f);
+            var rng = new System.Random(seed);
+            var raw = Noise(rng, n);
+            var doubled = new float[n * 2];
+            for (int i = 0; i < n; i++) doubled[i] = doubled[i + n] = raw[i];
+            var low = LowPass(LowPass(doubled, 400f), 400f);
+            var high = HighPass(doubled, 3000f);
+
+            var s = new float[n];
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)Rate;
+                float thump = Mathf.Pow(0.5f + 0.5f * Mathf.Cos(2f * Mathf.PI * 18f * t), 4f);
+                s[i] = low[i + n] * 2.5f * thump
+                     + Mathf.Sin(2f * Mathf.PI * 55f * t) * 0.5f * thump
+                     + Mathf.Sin(2f * Mathf.PI * 1200f * t) * 0.05f
+                     + Mathf.Sin(2f * Mathf.PI * 2400f * t) * 0.025f
+                     + high[i + n] * 0.05f;
+            }
+
+            float max = 0f;
+            foreach (var v in s) max = Mathf.Max(max, Mathf.Abs(v));
+            for (int i = 0; i < n; i++) s[i] *= 0.8f / max; // no end fade: it would click at the loop point
+            return s;
         }
 
         // ---------------------------------------------------------------- building blocks

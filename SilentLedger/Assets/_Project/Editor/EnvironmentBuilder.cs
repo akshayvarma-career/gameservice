@@ -278,7 +278,8 @@ namespace SilentLedger.EditorTools
         {
             if (root.GetComponent<Door>() != null || root.GetComponent<Target>() != null
                 || root.GetComponent<SquadMember>() != null || root.GetComponent<NavMeshAgent>() != null
-                || root.GetComponent<SilentLedger.World.RotorSpin>() != null)
+                || root.GetComponent<SilentLedger.World.RotorSpin>() != null
+                || root.GetComponent<SilentLedger.World.HelicopterArrival>() != null)
                 return;
             GameObjectUtility.SetStaticEditorFlags(root.gameObject,
                 StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccluderStatic | StaticEditorFlags.OccludeeStatic

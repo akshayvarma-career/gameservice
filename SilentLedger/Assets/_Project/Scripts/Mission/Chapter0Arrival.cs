@@ -28,6 +28,10 @@ namespace SilentLedger.Mission
         [SerializeField] SquadMember tamsin;
         [SerializeField] SquadMember varga;
 
+        [Header("Intro")]
+        [Tooltip("Flies Tony in. Optional: without it Tony is simply waiting at the helipad.")]
+        [SerializeField] SilentLedger.World.HelicopterArrival helicopter;
+
         [Header("Places")]
         [SerializeField] MissionInteractable loadoutBench;
         [SerializeField] Target[] rangeTargets;
@@ -44,7 +48,9 @@ namespace SilentLedger.Mission
             foreach (TouchHud.Control control in Enum.GetValues(typeof(TouchHud.Control)))
                 touchHud.SetControlVisible(control, false);
 
-            yield return hud.ShowBanner("CHAPTER 0 · FIRST LIGHT", "Site Hollow · 06:12", 3f);
+            var banner = StartCoroutine(hud.ShowBanner("CHAPTER 0 · FIRST LIGHT", "Site Hollow · 06:12", 3f));
+            if (helicopter != null) yield return helicopter.Play();
+            else yield return banner;
             yield return Arrival();
             yield return SniperRange();
             yield return Armory();
