@@ -55,3 +55,6 @@ mono_crash.*
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+# Drop zone for incoming art; imported copies live under SilentLedger/Assets/_Project/Art
+/art_inbox/

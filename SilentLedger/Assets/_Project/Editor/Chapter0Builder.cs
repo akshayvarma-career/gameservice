@@ -46,8 +46,9 @@ namespace SilentLedger.EditorTools
             EnvironmentBuilder.DawnPostProcessing("Ch0_Dawn_Profile");
 
             var squad = Group("Squad", null);
-            var tony = Character(squad, "Tony", new Color(0.55f, 0.8f, 0.35f), new Vector3(2.4f, 0f, 9f), 180f, 6f, follower: true);
-            Box("Bag", squad, new Vector3(3.2f, 0.2f, 8.2f), new Vector3(0.6f, 0.4f, 0.35f), Dark);
+            // Tony stands beside the cabin, his dropped bag at his feet.
+            var tony = Character(squad, "Tony", new Color(0.55f, 0.8f, 0.35f), new Vector3(3f, 0f, 14f), 200f, 6f, follower: true);
+            Box("Bag", squad, new Vector3(3.6f, 0.2f, 13.2f), new Vector3(0.6f, 0.4f, 0.35f), Dark);
             var bishop = Character(squad, "Bishop", new Color(0.55f, 0.62f, 0.75f), bishopSpot, 0f, 0f);
             var okafor = Character(squad, "Okafor", new Color(0.9f, 0.55f, 0.3f), okaforSpot, -90f, 6f);
             var tamsin = Character(squad, "Tamsin", new Color(0.75f, 0.5f, 0.95f), tamsinSpot, -90f, 6f);
@@ -209,6 +210,15 @@ namespace SilentLedger.EditorTools
             Box("H_Left", pad, new Vector3(-1.5f, 0.035f, 0f), new Vector3(0.6f, 0.01f, 5f), Accent, collider: false);
             Box("H_Right", pad, new Vector3(1.5f, 0.035f, 0f), new Vector3(0.6f, 0.01f, 5f), Accent, collider: false);
             Box("H_Bar", pad, new Vector3(0f, 0.035f, 0f), new Vector3(3f, 0.01f, 0.6f), Accent, collider: false);
+
+            // The real model when it has been imported (Silent Ledger > Art > Set Up Helicopter).
+            var model = AssetDatabase.LoadAssetAtPath<GameObject>(ArtSetup.HelicopterPrefab);
+            if (model != null)
+            {
+                var instance = (GameObject)PrefabUtility.InstantiatePrefab(model, pad);
+                instance.transform.localPosition = new Vector3(0f, 0f, 0.5f);
+                return;
+            }
 
             var heli = Group("Helicopter", pad, new Vector3(-0.5f, 0f, 1f));
             Box("Fuselage", heli, new Vector3(0f, 1.4f, 0f), new Vector3(2.4f, 2.2f, 5f), Metal);
