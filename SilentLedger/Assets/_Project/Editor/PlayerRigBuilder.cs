@@ -141,19 +141,28 @@ namespace SilentLedger.EditorTools
         static Weapon BuildRifle(Transform cam)
         {
             var weapon = ViewModelRoot("Rifle", cam);
-            ViewModelPart("Body", weapon.transform, new Vector3(0f, 0f, 0.1f), new Vector3(0.06f, 0.09f, 0.55f), Dark);
-            ViewModelPart("Magazine", weapon.transform, new Vector3(0f, -0.1f, 0.06f), new Vector3(0.045f, 0.14f, 0.07f), Metal);
-            ViewModelPart("Stock", weapon.transform, new Vector3(0f, -0.02f, -0.24f), new Vector3(0.05f, 0.08f, 0.18f), Dark);
-            ViewModelPart("Sight", weapon.transform, new Vector3(0f, 0.06f, 0f), new Vector3(0.025f, 0.03f, 0.08f), Metal);
             weapon.stats = new WeaponStats
             {
                 displayName = "Rifle", damage = 34f, roundsPerMinute = 600f, automatic = true,
                 magazineSize = 30, reserveAmmo = 120, reloadSeconds = 2.2f, range = 500f,
                 hipSpread = 2.5f, aimSpread = 0.3f, recoilPitch = 0.9f, recoilYaw = 0.25f, aimFov = 45f,
             };
-            // Aim pose keeps the top of the sight just below the line of sight.
-            weapon.hipPosition = new Vector3(0.2f, -0.22f, 0.45f);
-            weapon.aimPosition = new Vector3(0f, -0.09f, 0.38f);
+            if (AttachModel(weapon, ArtSetup.RiflePrefab))
+            {
+                // Model origin is the line of sight, so aiming just drops it a hair below centre.
+                weapon.hipPosition = new Vector3(0.13f, -0.1f, 0.36f);
+                weapon.aimPosition = new Vector3(0f, -0.022f, 0.42f);
+            }
+            else
+            {
+                ViewModelPart("Body", weapon.transform, new Vector3(0f, 0f, 0.1f), new Vector3(0.06f, 0.09f, 0.55f), Dark);
+                ViewModelPart("Magazine", weapon.transform, new Vector3(0f, -0.1f, 0.06f), new Vector3(0.045f, 0.14f, 0.07f), Metal);
+                ViewModelPart("Stock", weapon.transform, new Vector3(0f, -0.02f, -0.24f), new Vector3(0.05f, 0.08f, 0.18f), Dark);
+                ViewModelPart("Sight", weapon.transform, new Vector3(0f, 0.06f, 0f), new Vector3(0.025f, 0.03f, 0.08f), Metal);
+                // Aim pose keeps the top of the sight just below the line of sight.
+                weapon.hipPosition = new Vector3(0.2f, -0.22f, 0.45f);
+                weapon.aimPosition = new Vector3(0f, -0.09f, 0.38f);
+            }
             weapon.transform.localPosition = weapon.hipPosition;
             return weapon;
         }
@@ -161,20 +170,37 @@ namespace SilentLedger.EditorTools
         static Weapon BuildPistol(Transform cam)
         {
             var weapon = ViewModelRoot("Pistol", cam);
-            ViewModelPart("Slide", weapon.transform, new Vector3(0f, 0f, 0.04f), new Vector3(0.04f, 0.05f, 0.18f), Dark);
-            ViewModelPart("Grip", weapon.transform, new Vector3(0f, -0.07f, -0.02f), new Vector3(0.035f, 0.1f, 0.05f), Metal);
-            ViewModelPart("Sight", weapon.transform, new Vector3(0f, 0.03f, 0.1f), new Vector3(0.01f, 0.012f, 0.012f), Metal);
             weapon.stats = new WeaponStats
             {
                 displayName = "Pistol", damage = 40f, roundsPerMinute = 300f, automatic = false,
                 magazineSize = 12, reserveAmmo = 48, reloadSeconds = 1.5f, range = 100f,
                 hipSpread = 2f, aimSpread = 0.5f, recoilPitch = 1.6f, recoilYaw = 0.2f, aimFov = 55f,
             };
-            weapon.hipPosition = new Vector3(0.15f, -0.18f, 0.32f);
-            weapon.aimPosition = new Vector3(0f, -0.045f, 0.3f);
+            if (AttachModel(weapon, ArtSetup.PistolPrefab))
+            {
+                weapon.hipPosition = new Vector3(0.12f, -0.095f, 0.3f);
+                weapon.aimPosition = new Vector3(0f, -0.008f, 0.32f);
+            }
+            else
+            {
+                ViewModelPart("Slide", weapon.transform, new Vector3(0f, 0f, 0.04f), new Vector3(0.04f, 0.05f, 0.18f), Dark);
+                ViewModelPart("Grip", weapon.transform, new Vector3(0f, -0.07f, -0.02f), new Vector3(0.035f, 0.1f, 0.05f), Metal);
+                ViewModelPart("Sight", weapon.transform, new Vector3(0f, 0.03f, 0.1f), new Vector3(0.01f, 0.012f, 0.012f), Metal);
+                weapon.hipPosition = new Vector3(0.15f, -0.18f, 0.32f);
+                weapon.aimPosition = new Vector3(0f, -0.045f, 0.3f);
+            }
             weapon.transform.localPosition = weapon.hipPosition;
             weapon.gameObject.SetActive(false);
             return weapon;
+        }
+
+        /// <summary>Puts the imported gun model under the weapon, if it has been set up.</summary>
+        static bool AttachModel(Weapon weapon, string prefabPath)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            if (prefab == null) return false;
+            PrefabUtility.InstantiatePrefab(prefab, weapon.transform);
+            return true;
         }
 
         static Weapon ViewModelRoot(string name, Transform cam)

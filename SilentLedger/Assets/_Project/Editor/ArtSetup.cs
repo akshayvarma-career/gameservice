@@ -46,6 +46,82 @@ namespace SilentLedger.EditorTools
             return $"Built {HelicopterPrefab}";
         }
 
+        // ---------------------------------------------------------------- first-person weapons
+
+        /// <summary>Asset Store guns (Low Poly Guns Collection) live here; the folder is git-ignored.</summary>
+        public const string GunsFolder = GreyboxKit.Root + "/ThirdParty/LowPolyGuns";
+        public const string RiflePrefab = GunsFolder + "/Weapon_Rifle.prefab";
+        public const string PistolPrefab = GunsFolder + "/Weapon_Pistol.prefab";
+
+        [MenuItem("Silent Ledger/Art/Set Up Weapons")]
+        public static string SetupWeapons()
+        {
+            // M4-style carbine and polymer pistol, scaled to real length.
+            string rifle = BuildWeaponPrefab("assault4", RiflePrefab, length: 0.84f, rearZ: -0.3f);
+            string pistol = BuildWeaponPrefab("pistol3", PistolPrefab, length: 0.19f, rearZ: -0.06f);
+            AssetDatabase.SaveAssets();
+            return $"{rifle}; {pistol}";
+        }
+
+        /// <summary>
+        /// A view-model prefab whose origin is on the line of sight: the top of the gun sits at
+        /// y = 0, centred in x, the muzzle pointing +z, and the rear of the gun at rearZ.
+        /// </summary>
+        static string BuildWeaponPrefab(string name, string prefabPath, float length, float rearZ)
+        {
+            string folder = $"{GunsFolder}/{name}";
+            string model = $"{folder}/{name}.fbx";
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(model) == null) return $"Missing {model}";
+
+            var importer = (ModelImporter)AssetImporter.GetAtPath(model);
+            importer.materialImportMode = ModelImporterMaterialImportMode.None;
+            importer.importAnimation = false;
+            importer.isReadable = false;
+            importer.SaveAndReimport();
+
+            var baseColor = ConfigureTexture($"{folder}/{name}_diffuse.png", TextureKind.Color, 1024);
+            var normal = ConfigureTexture($"{folder}/{name}_normal.png", TextureKind.Normal, 1024);
+            var material = AssetDatabase.LoadAssetAtPath<Material>($"{folder}/M_{name}.mat");
+            if (material == null)
+            {
+                material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+                AssetDatabase.CreateAsset(material, $"{folder}/M_{name}.mat");
+            }
+            material.SetTexture("_BaseMap", baseColor);
+            material.SetTexture("_BumpMap", normal);
+            material.EnableKeyword("_NORMALMAP");
+            material.SetFloat("_Metallic", 0.4f);
+            material.SetFloat("_Smoothness", 0.45f);
+            EditorUtility.SetDirty(material);
+
+            var root = new GameObject(System.IO.Path.GetFileNameWithoutExtension(prefabPath));
+            var body = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(model), root.transform);
+            foreach (var renderer in body.GetComponentsInChildren<MeshRenderer>(true))
+            {
+                renderer.sharedMaterial = material;
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
+
+            // Scale to real length, then move so the sight line is the origin.
+            var bounds = WorldBounds(body);
+            body.transform.localScale *= length / bounds.size.z;
+            bounds = WorldBounds(body);
+            body.transform.localPosition -= new Vector3(bounds.center.x, bounds.max.y, bounds.min.z - rearZ);
+            GreyboxKit.SetLayerRecursively(root, GreyboxKit.IgnoreRaycastLayer);
+
+            PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
+            Object.DestroyImmediate(root);
+            return $"Built {prefabPath}";
+        }
+
+        static Bounds WorldBounds(GameObject go)
+        {
+            var renderers = go.GetComponentsInChildren<Renderer>();
+            var bounds = renderers[0].bounds;
+            foreach (var r in renderers) bounds.Encapsulate(r.bounds);
+            return bounds;
+        }
+
         static void AddBox(Transform parent, Vector3 center, Vector3 size)
         {
             var box = parent.gameObject.AddComponent<BoxCollider>();

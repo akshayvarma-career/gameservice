@@ -58,3 +58,8 @@ Desktop.ini
 
 # Drop zone for incoming art; imported copies live under SilentLedger/Assets/_Project/Art
 /art_inbox/
+
+# Unity Asset Store content: licensed for use in the game, not for redistribution in this public repo.
+# Re-extract from the Asset Store cache (see docs) on a new machine.
+/SilentLedger/Assets/_Project/ThirdParty/
+/SilentLedger/Assets/_Project/ThirdParty.meta

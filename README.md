@@ -28,3 +28,15 @@ The grey-box scenes are generated from code in `SilentLedger/Assets/_Project/Edi
 | `Ch0_TestRange` | Silent Ledger > Build Test Range | Sandbox for the player and weapons |
 
 Binary assets (textures, models, audio) are stored with Git LFS: run `git lfs install` once after cloning.
+
+## Unity Asset Store content (not in git)
+
+This repo is public and the Asset Store licence doesn't allow redistributing source assets, so
+`SilentLedger/Assets/_Project/ThirdParty/` is git-ignored. On a new machine:
+
+1. Download **Guns Pack: Low Poly Guns Collection** (Fun Assets) from the Asset Store via Package Manager > My Assets.
+2. Copy the `pistol3` and `assault4` folders (FBX + PNGs, with their `.meta` files) from the package into
+   `SilentLedger/Assets/_Project/ThirdParty/LowPolyGuns/`.
+3. Run **Silent Ledger > Art > Set Up Weapons**, then rebuild the scenes.
+
+Without these files the builders fall back to grey-box guns.
