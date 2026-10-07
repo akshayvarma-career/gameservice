@@ -50,7 +50,8 @@ namespace SilentLedger.EditorTools
             var squad = Group("Squad", null);
             // Tony rides in on the helicopter and jumps out of its left side; without the model he
             // waits there with his dropped bag.
-            var tony = Character(squad, "Tony", new Color(0.55f, 0.8f, 0.35f), new Vector3(-3.2f, 0f, 13.1f), 120f, 6f, follower: true);
+            var tony = Character(squad, "Tony", new Color(0.55f, 0.8f, 0.35f), new Vector3(-3.2f, 0f, 13.1f), 120f, 6f,
+                follower: true, modelPrefab: ArtSetup.TonyPrefab);
             var tonyBag = Box("Bag", squad, new Vector3(-2.5f, 0.2f, 12.3f), new Vector3(0.6f, 0.4f, 0.35f), Dark, collider: false);
             if (helicopter != null)
             {
@@ -361,21 +362,30 @@ namespace SilentLedger.EditorTools
 
         // ---------------------------------------------------------------- characters
 
+        /// <param name="modelPrefab">The character's model prefab; a coloured capsule stands in if it is missing.</param>
         static SquadMember Character(Transform parent, string name, Color color, Vector3 position, float yaw,
-            float faceRange, bool follower = false)
+            float faceRange, bool follower = false, string modelPrefab = null)
         {
             var root = Group(name, parent, position);
             root.localRotation = Quaternion.Euler(0f, yaw, 0f);
 
-            var material = Mat($"Char_{name.Replace(". ", "_").Replace(" ", "_")}", color);
-            var body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            body.name = "Body";
-            body.transform.SetParent(root, false);
-            body.transform.localPosition = new Vector3(0f, 0.9f, 0f);
-            body.transform.localScale = new Vector3(0.6f, 0.9f, 0.6f);
-            body.GetComponent<Renderer>().sharedMaterial = material;
-            Object.DestroyImmediate(body.GetComponent<Collider>());
-            Box("Visor", root, new Vector3(0f, 1.55f, 0.24f), new Vector3(0.36f, 0.12f, 0.12f), Dark, collider: false);
+            var model = modelPrefab != null ? AssetDatabase.LoadAssetAtPath<GameObject>(modelPrefab) : null;
+            if (model != null)
+            {
+                PrefabUtility.InstantiatePrefab(model, root);
+            }
+            else
+            {
+                var material = Mat($"Char_{name.Replace(". ", "_").Replace(" ", "_")}", color);
+                var body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+                body.name = "Body";
+                body.transform.SetParent(root, false);
+                body.transform.localPosition = new Vector3(0f, 0.9f, 0f);
+                body.transform.localScale = new Vector3(0.6f, 0.9f, 0.6f);
+                body.GetComponent<Renderer>().sharedMaterial = material;
+                Object.DestroyImmediate(body.GetComponent<Collider>());
+                Box("Visor", root, new Vector3(0f, 1.55f, 0.24f), new Vector3(0.36f, 0.12f, 0.12f), Dark, collider: false);
+            }
 
             var capsule = root.gameObject.AddComponent<CapsuleCollider>();
             capsule.height = 1.8f;

@@ -46,6 +46,49 @@ namespace SilentLedger.EditorTools
             return $"Built {HelicopterPrefab}";
         }
 
+        // ---------------------------------------------------------------- characters
+
+        public const string TonyPrefab = GreyboxKit.Root + "/Prefabs/Character_Tony.prefab";
+
+        [MenuItem("Silent Ledger/Art/Set Up Characters")]
+        public static string SetupCharacters()
+        {
+            string result = BuildCharacterPrefab(GreyboxKit.Root + "/Art/Characters/Tony", "Tony_Spencer", "T_Tony", TonyPrefab);
+            AssetDatabase.SaveAssets();
+            return result;
+        }
+
+        /// <summary>
+        /// A character model prefab: feet at the origin, facing +z, URP material, with stand-in
+        /// procedural motion until the character is rigged.
+        /// </summary>
+        static string BuildCharacterPrefab(string folder, string modelName, string texturePrefix, string prefabPath)
+        {
+            string model = $"{folder}/{modelName}.fbx";
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(model) == null) return $"Missing {model}";
+            ConfigureModel(model);
+
+            var material = LitMaterial($"{folder}/M_{modelName}.mat",
+                ConfigureTexture($"{folder}/{texturePrefix}_BaseColor.png", TextureKind.Color, 1024),
+                ConfigureTexture($"{folder}/{texturePrefix}_Normal.png", TextureKind.Normal, 1024),
+                ConfigureTexture($"{folder}/{texturePrefix}_MetallicSmoothness.png", TextureKind.Data, 512),
+                ConfigureTexture($"{folder}/{texturePrefix}_AO.png", TextureKind.Data, 512));
+
+            var root = new GameObject(System.IO.Path.GetFileNameWithoutExtension(prefabPath));
+            var body = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(model), root.transform);
+            foreach (var renderer in body.GetComponentsInChildren<MeshRenderer>(true))
+                renderer.sharedMaterial = material;
+
+            // Stand on the origin regardless of how the file was exported.
+            var bounds = WorldBounds(body);
+            body.transform.localPosition -= new Vector3(bounds.center.x, bounds.min.y, bounds.center.z);
+            body.AddComponent<ProceduralCharacterMotion>();
+
+            PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
+            Object.DestroyImmediate(root);
+            return $"Built {prefabPath} ({bounds.size.y:0.00} m tall)";
+        }
+
         // ---------------------------------------------------------------- first-person weapons
 
         /// <summary>Asset Store guns (Low Poly Guns Collection) live here; the folder is git-ignored.</summary>
