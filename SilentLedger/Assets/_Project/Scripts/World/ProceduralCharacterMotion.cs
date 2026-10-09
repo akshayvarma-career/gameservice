@@ -37,8 +37,9 @@ namespace SilentLedger.World
             Vector3 delta = body.position - lastPosition;
             lastPosition = body.position;
             delta.y = 0f;
-            // Teleports and vehicle rides would read as huge speeds; ignore them.
-            float measured = delta.magnitude / dt > 12f ? 0f : delta.magnitude / dt;
+            // Ignore teleports and vehicle rides (huge speeds) and slow drift (avoidance nudges).
+            float measured = delta.magnitude / dt;
+            if (measured > 12f || measured < 0.3f) measured = 0f;
             speed = Mathf.Lerp(speed, measured, 1f - Mathf.Exp(-8f * dt));
 
             float moving = Mathf.Clamp01(speed / 1.5f);
